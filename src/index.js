@@ -8,32 +8,36 @@ const calculateHeight = el => {
 };
 
 // Source adapted from: http://stackoverflow.com/a/16324762
-const makeHandler = el => event => {
-  const { scrollTop, scrollHeight } = el;
+const makeHandler = (el, onlyWhenScrollable) => event => {
+  const { scrollTop, scrollHeight, clientHeight } = el;
   const { type, detail, wheelDelta } = event;
-  const height = calculateHeight(el);
-  const delta = (type === 'DOMMouseScroll' ? detail * -40 : wheelDelta);
-  const up = delta > 0;
+  const isScrollable = scrollHeight > clientHeight;
 
-  const prevent = () => {
-    event.stopPropagation();
-    event.preventDefault();
-    event.returnValue = false;
+  if (!onlyWhenScrollable || isScrollable) {
+    const height = calculateHeight(el);
+    const delta = (type === 'DOMMouseScroll' ? detail * -40 : wheelDelta);
+    const up = delta > 0;
 
-    return false;
-  };
+    const prevent = () => {
+      event.stopPropagation();
+      event.preventDefault();
+      event.returnValue = false;
 
-  if (!up && -delta > scrollHeight - height - scrollTop) {
-    el.scrollTop = scrollHeight;
-    return prevent();
-  } else if (up && delta > scrollTop) {
-    el.scrollTop = 0;
-    return prevent();
+      return false;
+    };
+
+    if (!up && -delta > scrollHeight - height - scrollTop) {
+      el.scrollTop = scrollHeight;
+      return prevent();
+    } else if (up && delta > scrollTop) {
+      el.scrollTop = 0;
+      return prevent();
+    }
   }
 };
 
-export default el => {
-  const handler = makeHandler(el);
+export default (el, onlyWhenScrollable) => {
+  const handler = makeHandler(el, onlyWhenScrollable);
 
   const addEvent = (el.addEventListener || el.attachEvent).bind(el);
   const removeEvent = (el.removeEventListener || el.detachEvent).bind(el);
